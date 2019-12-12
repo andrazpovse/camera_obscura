@@ -1,5 +1,11 @@
+
+import sys
+# Append VLC library location to path
+sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 import vlc
 import time
+import RPi.GPIO as GPIO
+
 
 def play(p):
     '''
@@ -17,7 +23,8 @@ def play(p):
         # Change volume based on light. Can also break the loop if a certain threshold
         # is reached.
         if i > 5:
-            vlc.libvlc_audio_set_volume(p, 50)
+            pass
+            # vlc.libvlc_audio_set_volume(p, 50)
         
         print("Playing for ", i, "seconds.")
 
@@ -37,9 +44,21 @@ def set_music(instance, file):
 
     return m
 
-def detect_movement():
-    # TODO
-    pass
+def detect_movement(INPUT_PIN):
+    '''
+        @params
+            INPUT_PIN - number of pin where RADAR/PIR sensor is on
+        @returns
+            boolean - if movement is detected
+    '''
+    # Read the pin
+    if (GPIO.input(INPUT_PIN) == True): 
+        print('MOVEMENT')
+        return True
+    else:
+        print('NO movement')
+        return False
+    
 
 def light_status():
     # TODO
@@ -47,6 +66,14 @@ def light_status():
     pass
 
 if __name__ == "__main__":
+    # Init GPIO
+    GPIO.setmode(GPIO.BCM) 
+    # Radar sensor is on GPIO14
+    INPUT_PIN = 14
+    GPIO.setup(INPUT_PIN, GPIO.IN)
+    # detect_movement(INPUT_PIN)        
+
+
     # Init VLC
     instance = vlc.Instance('--aout=alsa')
     p = instance.media_player_new()
