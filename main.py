@@ -5,7 +5,15 @@ sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
 import vlc
 import time
 import RPi.GPIO as GPIO
+# Import SmBus for I2C
+import smbus
 
+# Configuration for light-sensor (BH1750)
+DEVICE     = 0x23 # Default device I2C address
+POWER_DOWN = 0x00 # No active state
+POWER_ON   = 0x01 # Power on
+RESET      = 0x07 # Reset data register value
+ONE_TIME_HIGH_RES_MODE = 0x20
 
 def play(p):
     '''
@@ -58,12 +66,21 @@ def detect_movement(INPUT_PIN):
     else:
         print('NO movement')
         return False
-    
+
+def convertToNumber(data):
+    # Simple function to convert 2 bytes of data
+    # into a decimal number
+    return ((data[1] + (256 * data[0])) / 1.2)
+ 
+def readLight(addr=DEVICE):
+    data = bus.read_i2c_block_data(addr,ONE_TIME_HIGH_RES_MODE)
+    return convertToNumber(data)    
 
 def light_status():
     # TODO
     # Returns some value correlated to brightness
-    pass
+	lightStatus = readLight()
+	return lightStatus
 
 if __name__ == "__main__":
     # Init GPIO
@@ -73,7 +90,9 @@ if __name__ == "__main__":
     GPIO.setup(INPUT_PIN, GPIO.IN)
     # detect_movement(INPUT_PIN)        
 
-
+    # Init smbus and light sensor
+    bus = smbus.SMBus(1)
+	
     # Init VLC
     instance = vlc.Instance('--aout=alsa')
     p = instance.media_player_new()
@@ -87,5 +106,7 @@ if __name__ == "__main__":
         # TODO Trigger play upon movement detected by sensor
         play(p)
         # Set the media to play next...can be based on current light
-        p.set_media(set_music(instance, 'test.mp3')) 
+        p.set_media(set_music(instance, 'test.mp3'))
+        print(light_status(), "lux")
+        time.sleep(1)
 
