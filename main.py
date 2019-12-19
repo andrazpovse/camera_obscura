@@ -8,6 +8,7 @@ import RPi.GPIO as GPIO
 # Import SmBus for I2C
 import smbus
 import math
+import requests
 
 # Configuration for light-sensor (BH1750)
 DEVICE     = 0x23 # Default device I2C address
@@ -27,6 +28,9 @@ SOUNDS = {
     4: "high.mp3",
     5: "high.mp3"
 }
+
+#Configuration for sending DATA
+API_KEY = "DBD15MS5LSQUNJL6"
 
 def play(p):
     '''
@@ -94,6 +98,12 @@ def readLight(addr=DEVICE):
     data = bus.read_i2c_block_data(addr,ONE_TIME_HIGH_RES_MODE)
     return int(convertToNumber(data)) 
 
+def sendToServer(value):
+    URL = "https://api.thingspeak.com/update"
+    PARAMS = {'api_key':API_KEY,
+              'field1':value}
+    r = requests.get(url = URL, params = PARAMS)
+
 def log_lux_scale(lux_value):
     """
         Changes the lux input to log10
@@ -149,7 +159,8 @@ if __name__ == "__main__":
         # TODO: send LUX value to some server 
         # (no need to send each value by itself - maybe avg of the last 30 values? or all 30 values at once)
         lux = readLight()
-
+        sendToServer(lux)
+        print("Current light level:", lux, "lux")
         # If movement was present in the last MOVEMENT_TIMEOUT milliseconds, do something
         if last_movement + movement_timeout > millis():
             

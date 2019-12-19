@@ -2,3 +2,12 @@
 sudo apt-get install python3-smbus (if not installed)
 sudo modprobe i2c-dev
 (check if enabled in bootconfig)
+
+Pin connections for sensor <-> RPI
+
+- ADDR - NC
+- SDA - SDA (PIN3)
+- SCL - SCL (PIN5)
+- GND - GND (PIN6)
+- VCC - 3.3V (PIN1)
+
