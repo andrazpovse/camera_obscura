@@ -11,3 +11,4 @@ Pin connections for sensor <-> RPI
 - GND - GND (PIN6)
 - VCC - 3.3V (PIN1)
 
+[ThingSpeak graph](https://thingspeak.com/channels/942106)
