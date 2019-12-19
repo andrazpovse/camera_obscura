@@ -22,8 +22,8 @@ FOLDER_SOUNDS = "sounds/"
 SOUNDS = {
     0: "low.mp3",
     1: "low.mp3",
-    2: "mid.mp3",
-    3: "mid.mp3",
+    2: "med.mp3",
+    3: "med.mp3",
     4: "high.mp3",
     5: "high.mp3"
 }
@@ -134,8 +134,8 @@ if __name__ == "__main__":
     p.set_media(set_music(instance, 'test.mp3')) 
 
 
-    # infinite loop that plays music when movement is detected
-    movement_timeout = 5000
+    # How long to play after last movement was detected - in millis
+    movement_timeout = 6 * 1000
     last_movement = 0
     while True:
         # If movement is detected, update last_movement value
@@ -158,7 +158,7 @@ if __name__ == "__main__":
 
             # Set the media to play next based on LUX value
             # TODO: remove '/10' part. this is just because we only have like 3 tracks
-            sound_to_play = SOUNDS[(log_lux_scale() / 10)]
+            sound_to_play = SOUNDS[int(log_lux_scale(lux) / 10)]
             p.set_media(set_music(instance, FOLDER_SOUNDS + sound_to_play))
             play(p)
         # Nobody inside. No sounds. Sleep for 2 seconds
