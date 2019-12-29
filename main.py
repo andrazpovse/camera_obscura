@@ -31,6 +31,8 @@ SOUNDS = {
 
 #Configuration for sending DATA
 API_KEY = "DBD15MS5LSQUNJL6"
+API_URL = "http://vitez.si:8086/write?db=ioi"
+DEVICE_NAME = "dev01"
 
 def play(p):
     '''
@@ -98,11 +100,15 @@ def readLight(addr=DEVICE):
     data = bus.read_i2c_block_data(addr,ONE_TIME_HIGH_RES_MODE)
     return int(convertToNumber(data)) 
 
-def sendToServer(value):
-    URL = "https://api.thingspeak.com/update"
-    PARAMS = {'api_key':API_KEY,
-              'field1':value}
-    r = requests.get(url = URL, params = PARAMS)
+def sendLightToServer(value):
+    print("Sending light value to:", API_URL)
+    r = requests.post(url = API_URL, data = 'lightIntensity,machine='+DEVICE_NAME+' intensity='+str(value))
+    print(r)
+
+def sendMovementToServer(value):
+    print("Sending movement value to:", API_URL)
+    r = requests.post(url = API_URL, data = 'movement,machine='+DEVICE_NAME+' movement='+str(value))
+    print(r)
 
 def log_lux_scale(lux_value):
     """
@@ -152,14 +158,16 @@ if __name__ == "__main__":
         if detect_movement(INPUT_PIN):
             print("Movement detected")
             last_movement = millis()
+            sendMovementToServer(1)
         else:
             print("No movement")
+            sendMovementToServer(0)
 
         # Read LUX and send to server regardless of movement
         # TODO: send LUX value to some server 
         # (no need to send each value by itself - maybe avg of the last 30 values? or all 30 values at once)
         lux = readLight()
-        sendToServer(lux)
+        sendLightToServer(lux)
         print("Current light level:", lux, "lux")
         # If movement was present in the last MOVEMENT_TIMEOUT milliseconds, do something
         if last_movement + movement_timeout > millis():
