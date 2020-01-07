@@ -1,5 +1,4 @@
 from pydub import AudioSegment
-# from pydub.playback import play
 from pydub.playback import _play_with_simpleaudio
 
 import random
@@ -95,7 +94,7 @@ def play_sound(lux):
     '''
     # Multiply the log10LUX with 100, so we get a nicer range
     sound_to_play = make_sound(lux * 100)
-    # Play sound in a thread
+    # Play sound in a thread so it can overlap while it loads a new file to play
     t1 = threading.Thread(target=play,args=(sound_to_play,))
     t1.start()
     # RPI takes cca 2 seconds to play a new file)
