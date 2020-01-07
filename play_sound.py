@@ -71,13 +71,12 @@ def make_sound(lux):
     # get limits for max,min length of silence and crackle sound percentage chance
     lower_silence_limit, upper_silence_limit, crackle_limit = sound_generation_limits(lux)
     
-    # Make each sound sample last around 4 seconds
-    approx_sample_length = 4*1000
+    # Make each sound sample last around 3 seconds
+    approx_sample_length = 3*1000
     # Start sound with 10ms of silence (not neccessary)
     sound_to_play = AudioSegment.silent(duration=10)
     # Append silences, clicks and crackles untill we reach wanted length
     while len(sound_to_play) < approx_sample_length:
-        print(len(sound_to_play))
         # Append random silence to the sound within the limits
         s = random.randint(lower_silence_limit,upper_silence_limit)
         sound_to_play += AudioSegment.silent(duration=s)
@@ -99,9 +98,8 @@ def play_sound(lux):
     # Play sound in a thread
     t1 = threading.Thread(target=play,args=(sound_to_play,))
     t1.start()
-    # Sleep for half of the duration then move on
-    # TODO: change this sleep based on time RPI takes to play new sample
-    time.sleep(sound_to_play.duration_seconds /2)
+    # RPI takes cca 2 seconds to play a new file)
+    time.sleep(sound_to_play.duration_seconds - 2)
 
 
 
