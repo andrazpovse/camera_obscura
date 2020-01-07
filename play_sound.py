@@ -12,40 +12,49 @@ crackle_slower = AudioSegment.from_wav("sounds/geiger/single_crackle_slower.wav"
 crackles = [double_crackle, crackle_faster, crackle_slower]
 
 
+
+def sound_generation_limits(lux):
+    '''
+        input: lux = log10(LUX)*100...ranging from 0 to about 485
+
+        output: 
+            - lower_silence_limit: lower limit for silence sound parts (in MS)
+            - upper_silence_limit: upper limit for silence sound parts (in MS)
+            - crackle_limit: percent chance of crackle playing
+    '''
+    print("Log10(LUX) * 100  = ", lux)
+    upper_silence_limit = 600 - lux
+    lower_silence_limit = upper_silence_limit / 5
+    if lux > 175:
+        crackle_limit = (lux / 10)
+    else:
+        crackle_limit = (lux / 20)
+    # Safety check in case lux is 0
+    if crackle_limit <= 0:
+        crackle_limit = 1
+    print('upper_silence_limit: ', upper_silence_limit)
+    print('lower_silence_limit: ', lower_silence_limit)
+    print('crackle_limit: ', crackle_limit)
+
+    return lower_silence_limit, upper_silence_limit, crackle_limit
+
 def make_sound(lux):
     '''
-        input: lux = log10(LUX)*100
+        input: lux = log10(LUX)*100...ranging from 0 to about 485
 
         output: generated sound to play
     '''
-    # Check lux value and assign correct lower and upper limit for silence length (in milliseconds)
-    # and crackle limit (percent chance that a crackle will occur instead of click)
-    if lux < 100:
-        lower = 100
-        upper = 500
-        crackle_limit = 5
-    elif lux < 500:
-        lower = 50
-        upper = 400
-        crackle_limit = 10
-    elif lux < 800:
-        lower = 25
-        upper = 200
-        crackle_limit = 25
-    else:
-        lower = 10
-        upper = 150
-        crackle_limit = 40
-    # TODO: change n based on lux (loger silences yield longer sound_to_play
-    # and should therefore have less clicks & crackles to maintain simillar length
-    # TODO: n could also always be the same (same for certain lux values)
-    n = random.randint(4,15)
+    # get limits for max,min length of silence and crackle sound percentage chance
+    lower_silence_limit, upper_silence_limit, crackle_limit = sound_generation_limits(lux)
     
+    # Make each sound sample last around 4 seconds
+    approx_sample_length = 4*1000
     # Start sound with 10ms of silence (not neccessary)
     sound_to_play = AudioSegment.silent(duration=10)
-    for i in range(n):
-        s = random.randint(lower,upper)
-        # Append random silence to the sound
+    # Append silences, clicks and crackles untill we reach wanted length
+    while len(sound_to_play) < approx_sample_length:
+        # Append random silence to the sound within the limits
+        s = random.randint(lower_silence_limit,upper_silence_limit)
         sound_to_play += AudioSegment.silent(duration=s)
         # Append a random crackle if we are within crackle limit
         if random.randint(1,100) < crackle_limit:
@@ -53,8 +62,6 @@ def make_sound(lux):
         # Else append a click
         else:
             sound_to_play += click
-        # Append random silence to the sound (same 's' as above)
-        sound_to_play += AudioSegment.silent(duration=s)
 
     return sound_to_play
 
@@ -69,13 +76,12 @@ def play_sound(lux):
 
 
 if __name__ == "__main__":
-    # luxes and idx used for testing only
-    luxes = [10, 400, 900]
+    # log10luxes and idx used for testing only
+    log10luxes = [1, 2.5, 4.3]
     idx = 0
     # Infinite loop across luxes
     while True:
-        lux = luxes[idx]
+        lux = log10luxes[idx]
         idx += 1
-        idx = idx % len(luxes)    
-        print("Current lux value: ", lux)
-        play(make_sound(lux))
+        idx = idx % len(log10luxes)    
+        play_sound(lux)

@@ -1,2 +1,2 @@
-python-vlc==3.0.7110
+pydub
 RPi.GPIO
