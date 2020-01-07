@@ -1,14 +1,16 @@
 
 import sys
-# Append VLC library location to path
+# Append library locations to path
 sys.path.append('/home/pi/.local/lib/python3.7/site-packages')
-import vlc
 import time
 import RPi.GPIO as GPIO
 # Import SmBus for I2C
 import smbus
 import math
 import requests
+# Other python file that takes care of generating and playing sound
+from play_sound import play_sound
+
 
 # Configuration for light-sensor (BH1750)
 DEVICE     = 0x23 # Default device I2C address
@@ -34,46 +36,21 @@ API_KEY = "DBD15MS5LSQUNJL6"
 API_URL = "http://vitez.si:8086/write?db=ioi"
 DEVICE_NAME = "dev01"
 
-def play(p):
-    '''
-        Plays the entire music track
-        @params
-            p - media player instance with set media file
-    '''
-    p.play() 
-    vlc.libvlc_audio_set_volume(p, 100)  # volume 0..100
-    time.sleep(1)
-    duration = p.get_length() / 1000
-
-    for i in range(int(duration)):
-        time.sleep(1)
-        print("Playing for ", i, "seconds.")
-
-    return
 
 
-def set_music(instance, file):
-    '''
-        Sets the music to play.
-        @params
-            instance - VLC instance
-            file - path to file(mp3, others?try)
-        @returns
-            media file for instance to play
-    '''
-    m = instance.media_new(file)
-
-    return m
-
-def detect_movement(INPUT_PIN):
+def detect_movement(INPUT_PINS):
     '''
         @params
-            INPUT_PIN - number of pin where RADAR/PIR sensor is on
+            INPUT_PINS - numbers of pins where RADAR/PIR sensor is on
         @returns
             boolean - if movement is detected
     '''
-    # Read the pin and return boolean
-    return GPIO.input(INPUT_PIN)
+    # Check list of inputs for movement. If any of them is true, return true
+    for ip in INPUT_PINS:
+        if GPIO.input(ip):
+            return True
+    # else return false
+    return False
 
 def convertToNumber(data):
     # Simple function to convert 2 bytes of data
@@ -116,7 +93,7 @@ def log_lux_scale(lux_value):
 
         input: lux_value....value between 0 and 65536 -> after log10 yields between 0 and cca 5
 
-        output: integer ranging from 0 to 50, corresponding to song index to play
+        output: log10 of lux value
 
     """
     if lux_value == 0:
@@ -124,38 +101,33 @@ def log_lux_scale(lux_value):
     else:
         log_lux = math.log10(lux_value)
 
-    # For example if we have cca 50 different songs, play one that is on that rank.
-    return int(log_lux * 10)
+    return log_lux
 
 def millis():
     # equivalent to C millis
     return int(round(time.time() * 1000))
 
 
+
 if __name__ == "__main__":
     # Init GPIO
     GPIO.setmode(GPIO.BCM) 
-    # Radar sensor is on GPIO14
-    INPUT_PIN = 14
-    GPIO.setup(INPUT_PIN, GPIO.IN)
+    # Radar sensor is on GPIO14. List of movement detector input pins.
+    INPUT_PINS = [14]
+    for ip in INPUT_PINS:
+        GPIO.setup(ip, GPIO.IN)
 
     # Init smbus and light sensor
     bus = smbus.SMBus(1)
-	
-    # Init VLC
-    instance = vlc.Instance('--aout=alsa')
-    p = instance.media_player_new()
-
-    # Set the music file to play
-    p.set_media(set_music(instance, 'test.mp3')) 
 
 
     # How long to play after last movement was detected - in millis
-    movement_timeout = 6 * 1000
+    # Set to 60 seconds
+    movement_timeout = 60 * 1000
     last_movement = 0
     while True:
         # If movement is detected, update last_movement value
-        if detect_movement(INPUT_PIN):
+        if detect_movement(INPUT_PINS):
             print("Movement detected")
             last_movement = millis()
             sendMovementToServer(1)
@@ -164,8 +136,6 @@ if __name__ == "__main__":
             sendMovementToServer(0)
 
         # Read LUX and send to server regardless of movement
-        # TODO: send LUX value to some server 
-        # (no need to send each value by itself - maybe avg of the last 30 values? or all 30 values at once)
         lux = readLight()
         sendLightToServer(lux)
         print("Current light level:", lux, "lux")
@@ -173,14 +143,11 @@ if __name__ == "__main__":
         if last_movement + movement_timeout > millis():
             
             print(lux, "lux")
-            print("LOG10 lux: ", log_lux_scale(lux))
-
-            # Set the media to play next based on LUX value
-            # TODO: remove '/10' part. this is just because we only have like 3 tracks
-            sound_to_play = SOUNDS[int(log_lux_scale(lux) / 10)]
-            p.set_media(set_music(instance, FOLDER_SOUNDS + sound_to_play))
-            play(p)
-        # Nobody inside. No sounds. Sleep for 2 seconds
+            log10lux = log_lux_scale(lux)
+            print("LOG10 lux: ", log10lux)
+            # Play sound based on log10 lux value
+            play_sound(log10lux)
+        # Nobody inside. No sounds. Sleep for 1 second
         else:
-            time.sleep(2)
+            time.sleep(1)
 

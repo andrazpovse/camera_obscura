@@ -3,9 +3,18 @@ from pydub.playback import play
 import random
 
 
+click = AudioSegment.from_wav("sounds/geiger/single_click.wav")
+
+double_crackle = AudioSegment.from_wav("sounds/geiger/double_crackle.wav")
+crackle_faster = AudioSegment.from_wav("sounds/geiger/single_crackle_faster.wav")
+crackle_slower = AudioSegment.from_wav("sounds/geiger/single_crackle_slower.wav")
+# List of all crackles.
+crackles = [double_crackle, crackle_faster, crackle_slower]
+
+
 def make_sound(lux):
     '''
-        input: lux...not yet defined, but probably lux = log10(LUX)*500
+        input: lux = log10(LUX)*100
 
         output: generated sound to play
     '''
@@ -49,15 +58,17 @@ def make_sound(lux):
 
     return sound_to_play
 
+def play_sound(lux):
+    '''
+        input: log10 of LUX value
+    '''
+    # Multiply the log10LUX with 100, so we get a nicer range
+    sound_to_play = make_sound(lux * 100)
+    play(sound_to_play)
+
+
+
 if __name__ == "__main__":
-    click = AudioSegment.from_wav("sounds/geiger/single_click.wav")
-
-    double_crackle = AudioSegment.from_wav("sounds/geiger/double_crackle.wav")
-    crackle_faster = AudioSegment.from_wav("sounds/geiger/single_crackle_faster.wav")
-    crackle_slower = AudioSegment.from_wav("sounds/geiger/single_crackle_slower.wav")
-    # List of all crackles.
-    crackles = [double_crackle, crackle_faster, crackle_slower]
-
     # luxes and idx used for testing only
     luxes = [10, 400, 900]
     idx = 0
