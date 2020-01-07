@@ -137,7 +137,10 @@ if __name__ == "__main__":
 
         # Read LUX and send to server regardless of movement
         lux = readLight()
-        sendLightToServer(lux)
+        try:
+            sendLightToServer(lux)
+        except:
+            print("Failed to connect to server")
         print("Current light level:", lux, "lux")
         # If movement was present in the last MOVEMENT_TIMEOUT milliseconds, do something
         if last_movement + movement_timeout > millis():
