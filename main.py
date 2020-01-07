@@ -130,10 +130,16 @@ if __name__ == "__main__":
         if detect_movement(INPUT_PINS):
             print("Movement detected")
             last_movement = millis()
-            sendMovementToServer(1)
+            try:
+                sendMovementToServer(1)
+            except:
+                print("Failed to connect to server")
         else:
             print("No movement")
-            sendMovementToServer(0)
+            try:
+                sendMovementToServer(0)
+            except:
+                print("Failed to connect to server")
 
         # Read LUX and send to server regardless of movement
         lux = readLight()
