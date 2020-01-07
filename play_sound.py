@@ -15,7 +15,7 @@ crackles = [double_crackle, crackle_faster, crackle_slower]
 
 def sound_generation_limits(lux):
     '''
-        input: lux = log10(LUX)*100...ranging from 0 to about 485
+        input: lux = log10(LUX)*100...ranging from 0 to about 500
 
         output: 
             - lower_silence_limit: lower limit for silence sound parts (in MS)
@@ -23,12 +23,25 @@ def sound_generation_limits(lux):
             - crackle_limit: percent chance of crackle playing
     '''
     print("Log10(LUX) * 100  = ", lux)
-    upper_silence_limit = 600 - lux
-    lower_silence_limit = upper_silence_limit / 5
-    if lux > 175:
-        crackle_limit = (lux / 10)
-    else:
+    # Cloudy, very overcast day is less than 250
+    if lux < 250:
         crackle_limit = (lux / 20)
+        upper_silence_limit = 750 - lux
+        lower_silence_limit = upper_silence_limit / 3
+    elif lux < 350:
+        crackle_limit = (lux / 15)
+        upper_silence_limit = 650 - lux
+        lower_silence_limit = upper_silence_limit / 4
+    # More than 350 is full daylight higher values reaching direct sun
+    elif lux < 450:
+        upper_silence_limit = 600 - lux
+        lower_silence_limit = upper_silence_limit / 5
+        crackle_limit = (lux / 10)
+    # Direct daylight sunlight values reaching up to 500
+    else:
+        upper_silence_limit = 550 - lux
+        lower_silence_limit = upper_silence_limit / 10
+        crackle_limit = (lux / 7)
     # Safety check in case lux is 0
     if crackle_limit <= 0:
         crackle_limit = 1
@@ -53,6 +66,7 @@ def make_sound(lux):
     sound_to_play = AudioSegment.silent(duration=10)
     # Append silences, clicks and crackles untill we reach wanted length
     while len(sound_to_play) < approx_sample_length:
+        print(len(sound_to_play))
         # Append random silence to the sound within the limits
         s = random.randint(lower_silence_limit,upper_silence_limit)
         sound_to_play += AudioSegment.silent(duration=s)
@@ -77,7 +91,7 @@ def play_sound(lux):
 
 if __name__ == "__main__":
     # log10luxes and idx used for testing only
-    log10luxes = [1, 2.5, 4.3]
+    log10luxes = [2.176, 3.4771, 4.431, 4.65]
     idx = 0
     # Infinite loop across luxes
     while True:
