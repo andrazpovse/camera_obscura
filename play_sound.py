@@ -36,7 +36,7 @@ def sound_generation_limits(lux):
     print('lower_silence_limit: ', lower_silence_limit)
     print('crackle_limit: ', crackle_limit)
 
-    return lower_silence_limit, upper_silence_limit, crackle_limit
+    return int(lower_silence_limit), int(upper_silence_limit), int(crackle_limit)
 
 def make_sound(lux):
     '''
