@@ -79,12 +79,14 @@ def readLight(addr=DEVICE):
 
 def sendLightToServer(value):
     print("Sending light value to:", API_URL)
-    r = requests.post(url = API_URL, data = 'lightIntensity,machine='+DEVICE_NAME+' intensity='+str(value))
+    r = requests.post(url = API_URL, data = 'lightIntensity,machine='+DEVICE_NAME+' intensity='+str(value),
+         timeout=2)
     print(r)
 
 def sendMovementToServer(value):
     print("Sending movement value to:", API_URL)
-    r = requests.post(url = API_URL, data = 'movement,machine='+DEVICE_NAME+' movement='+str(value))
+    r = requests.post(url = API_URL, data = 'movement,machine='+DEVICE_NAME+' movement='+str(value),
+         timeout=2)
     print(r)
 
 def log_lux_scale(lux_value):
@@ -125,28 +127,42 @@ if __name__ == "__main__":
     # Set to 60 seconds
     movement_timeout = 60 * 1000
     last_movement = 0
+
+    # If we fail to connect to server, this will tell us after how many iterations
+    # we try again
+    try_connect_to_server = 0
     while True:
         # If movement is detected, update last_movement value
+        movement_status = 0
         if detect_movement(INPUT_PINS):
             print("Movement detected")
             last_movement = millis()
-            try:
-                sendMovementToServer(1)
-            except:
-                print("Failed to connect to server")
+            movement_status = 1
         else:
             print("No movement")
-            try:
-                sendMovementToServer(0)
-            except:
-                print("Failed to connect to server")
+            movement_status = 0
 
         # Read LUX and send to server regardless of movement
         lux = readLight()
-        try:
-            sendLightToServer(lux)
-        except:
-            print("Failed to connect to server")
+
+        # Only connect to server if previous attempts were ok, or certain iterations passed
+        if try_connect_to_server == 0:
+            # Send movement status to server
+            try:
+                sendMovementToServer(movement_status)
+            except:
+                # Failed to connect. Wait 10 iterations untill next attempt.
+                try_connect_to_server = 10
+                print("Failed to connect to server")
+            # Send light status to server
+            try:
+                sendLightToServer(lux)
+            except:
+                try_connect_to_server = 10
+                print("Failed to connect to server")
+        else:
+            # Reduce remaining iterations untill another connection to server
+            try_connect_to_server -= 1
         print("Current light level:", lux, "lux")
         # If movement was present in the last MOVEMENT_TIMEOUT milliseconds, do something
         if last_movement + movement_timeout > millis():
