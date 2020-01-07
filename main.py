@@ -19,18 +19,6 @@ POWER_ON   = 0x01 # Power on
 RESET      = 0x07 # Reset data register value
 ONE_TIME_HIGH_RES_MODE = 0x20
 
-# Folder with the sounds
-FOLDER_SOUNDS = "sounds/"
-# Dictionary for sounds
-SOUNDS = {
-    0: "low.mp3",
-    1: "low.mp3",
-    2: "med.mp3",
-    3: "med.mp3",
-    4: "high.mp3",
-    5: "high.mp3"
-}
-
 #Configuration for sending DATA
 API_KEY = "DBD15MS5LSQUNJL6"
 API_URL = "http://vitez.si:8086/write?db=ioi"
@@ -122,7 +110,6 @@ if __name__ == "__main__":
     # Init smbus and light sensor
     bus = smbus.SMBus(1)
 
-
     # How long to play after last movement was detected - in millis
     # Set to 60 seconds
     movement_timeout = 60 * 1000
@@ -175,4 +162,3 @@ if __name__ == "__main__":
         # Nobody inside. No sounds. Sleep for 1 second
         else:
             time.sleep(1)
-
