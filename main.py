@@ -67,15 +67,31 @@ def readLight(addr=DEVICE):
 
 def sendLightToServer(value):
     print("Sending light value to:", API_URL)
-    r = requests.post(url = API_URL, data = 'lightIntensity,machine='+DEVICE_NAME+' intensity='+str(value),
-         timeout=2)
-    print(r)
+    try:
+        r = requests.post(url = API_URL, data = 'lightIntensity,machine='+DEVICE_NAME+' intensity='+str(value),
+            timeout=2)
+        print(r)
+
+        return True
+    except Exception as e:
+        print("Failed to connect to server")
+        print(e)
+
+        return False
 
 def sendMovementToServer(value):
     print("Sending movement value to:", API_URL)
-    r = requests.post(url = API_URL, data = 'movement,machine='+DEVICE_NAME+' movement='+str(value),
-         timeout=2)
-    print(r)
+    try:
+        r = requests.post(url = API_URL, data = 'movement,machine='+DEVICE_NAME+' movement='+str(value),
+            timeout=2)
+        print(r)
+
+        return True
+    except Exception as e:
+        print("Failed to connect to server")
+        print(e)
+
+        return False
 
 def log_lux_scale(lux_value):
     """
@@ -134,19 +150,16 @@ if __name__ == "__main__":
 
         # Only connect to server if previous attempts were ok, or certain iterations passed
         if try_connect_to_server == 0:
+            # TODO: if we have no internet connection, timeout will not work
+            # TODO: fix issue when we have no internet connection (takes too long to drop)
             # Send movement status to server
-            try:
-                sendMovementToServer(movement_status)
-            except:
-                # Failed to connect. Wait 10 iterations untill next attempt.
-                try_connect_to_server = 10
-                print("Failed to connect to server")
+            status1 = sendMovementToServer(movement_status)
             # Send light status to server
-            try:
-                sendLightToServer(lux)
-            except:
-                try_connect_to_server = 10
-                print("Failed to connect to server")
+            status2 = sendLightToServer(lux)
+            
+            # If any of them is false, stop connecting for 20 iterations
+            if status1 and status2:
+                try_connect_to_server = 20
         else:
             # Reduce remaining iterations untill another connection to server
             try_connect_to_server -= 1
