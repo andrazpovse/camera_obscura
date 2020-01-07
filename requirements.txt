@@ -1,2 +1,3 @@
 pydub
 RPi.GPIO
+simpleaudio

@@ -1,6 +1,10 @@
 from pydub import AudioSegment
-from pydub.playback import play
+# from pydub.playback import play
+from pydub.playback import _play_with_simpleaudio
+
 import random
+import threading
+import time
 
 
 click = AudioSegment.from_wav("sounds/geiger/single_click.wav")
@@ -11,6 +15,13 @@ crackle_slower = AudioSegment.from_wav("sounds/geiger/single_crackle_slower.wav"
 # List of all crackles.
 crackles = [double_crackle, crackle_faster, crackle_slower]
 
+
+
+def play(sound):
+    '''
+        Play sound in a thread
+    '''
+    play_obj = _play_with_simpleaudio(sound)
 
 
 def sound_generation_limits(lux):
@@ -85,7 +96,12 @@ def play_sound(lux):
     '''
     # Multiply the log10LUX with 100, so we get a nicer range
     sound_to_play = make_sound(lux * 100)
-    play(sound_to_play)
+    # Play sound in a thread
+    t1 = threading.Thread(target=play,args=(sound_to_play,))
+    t1.start()
+    # Sleep for half of the duration then move on
+    # TODO: change this sleep based on time RPI takes to play new sample
+    time.sleep(sound_to_play.duration_seconds /2)
 
 
 
