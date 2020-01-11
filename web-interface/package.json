@@ -8,8 +8,10 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "audio-buffer-from": "^1.1.1",
     "axios": "^0.19.0",
     "core-js": "^3.4.3",
+    "crunker": "^0.2.0",
     "vue": "^2.6.10"
   },
   "devDependencies": {
