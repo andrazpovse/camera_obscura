@@ -33,8 +33,13 @@ def sound_generation_limits(lux):
             - crackle_limit: percent chance of crackle playing
     '''
     print("Log10(LUX) * 100  = ", lux)
+    # Very dark, approaching night
+    if lux < 150:
+        crackle_limit = (lux / 30)
+        upper_silence_limit = 1000 - lux
+        lower_silence_limit = upper_silence_limit / 2
     # Cloudy, very overcast day is less than 250
-    if lux < 250:
+    elif lux < 250:
         crackle_limit = (lux / 20)
         upper_silence_limit = 750 - lux
         lower_silence_limit = upper_silence_limit / 3
